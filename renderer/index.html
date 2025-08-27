@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sztab</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <h1>Sztab</h1>
+  <form id="meldunek-form">
+    <input type="text" id="jednostka" placeholder="Jednostka">
+    <input type="text" id="typ" placeholder="Typ (MEDEVAC, SAS)">
+    <input type="text" id="lat" placeholder="Lat">
+    <input type="" id="lon" placeholder="Lon">
+    <button type="submit">Wyślij meldunek</button>
+  </form>
+  <div id="map" style="height: 600px;"></div>
+
+  <div style="display: flex; gap: 20px;">
+  <div id="map" style="width: 70%; height: 600px;"></div>
+  <div style="width: 30%;">
+
+    <h2>Lista meldunków</h2>
+    <table border="1" width="100%">
+      <thead>
+        <tr>
+          <th>jednostka</th>
+          <th>meldunek</th>
+          <th>lat</th>
+          <th>lon</th>
+          <th>data</th>
+        </tr>
+      </thead>
+      <tbody id="meldunki-tabela"></tbody>
+    </table>
+  </div>
+</div>
+
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
