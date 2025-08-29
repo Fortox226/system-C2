@@ -62,3 +62,37 @@ document.getElementById('wyslijBtn').addEventListener('click', () => {
 // załaduj przy starcie
 zaladujTabele();
 
+// ===== Live tracking – markery aktualizowane =====
+const liveMarkers = new Map(); // key = unit -> Leaflet marker
+
+async function refreshLiveMarkers() {
+  try {
+    const positions = await window.api.getLivePositions(); // [{unit, lat, lon, acc, spd, ts}, ...]
+    positions.forEach(p => {
+      const key = p.unit;
+      console.log(p.lat)
+      console.log(p.lon)
+      if (!liveMarkers.has(key)) {
+        const m = L.marker([p.lat, p.lon], { title: key });
+        m.addTo(map).bindPopup(
+          `<b>${key}</b><br/>${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}<br/>${new Date(p.ts).toLocaleString()}`
+        );
+        liveMarkers.set(key, m);
+      } else {
+        const m = liveMarkers.get(key);
+        m.setLatLng([p.lat, p.lon]);
+        m.setPopupContent(
+          `<b>${key}</b><br/>${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}<br/>${new Date(p.ts).toLocaleString()}`
+        );
+      }
+    });
+  } catch (e) {
+    console.error('Błąd odświeżania pozycji live:', e);
+  }
+}
+
+// Odświeżaj co 2 sekundy (możesz zmienić)
+setInterval(refreshLiveMarkers, 2000);
+refreshLiveMarkers();
+// ===== /Live tracking =====
+

@@ -5,3 +5,9 @@ contextBridge.exposeInMainWorld('api', {
   getMeldunki: () => ipcRenderer.invoke('get-meldunki')
 });
 
+contextBridge.exposeInMainWorld('api', {
+  // ...to co już masz (addMeldunek, getMeldunki, itd.)
+  getLivePositions: () => ipcRenderer.invoke('get-live-positions')
+});
+
+

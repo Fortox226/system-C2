@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tracker – telefon</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 16px; }
+    label { display:block; margin: 8px 0 4px; }
+    input, button { padding: 10px; width: 100%; max-width: 420px; }
+    .row { margin: 8px 0; }
+    .ok { color: green; }
+    .err { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Tracker – telefon</h1>
+
+  <div class="row">
+    <label>Nazwa jednostki (np. Pluton A)</label>
+    <input id="unit" placeholder="Pluton A" />
+  </div>
+
+  <div class="row">
+    <button id="start">Start śledzenia</button>
+  </div>
+  <div class="row">
+    <button id="stop" disabled>Stop</button>
+  </div>
+
+  <p id="status">Oczekiwanie…</p>
+
+  <script>
+    let watchId = null;
+
+    function post(url, data) {
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+
+    function fmt(ts){ return new Date(ts).toLocaleString(); }
+
+    document.getElementById('start').onclick = async () => {
+      const unit = document.getElementById('unit').value.trim() || 'NIEZNANA';
+      if (!navigator.geolocation) {
+        document.getElementById('status').innerHTML =
+          '<span class="err">Geolokacja niedostępna w tej przeglądarce.</span>';
+        return;
+      }
+
+      // Pierwszy strzał (szybki odczyt)
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const payload = {
+          unit,
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: pos.coords.accuracy,
+          spd: pos.coords.speed || 0,
+          ts: Date.now()
+        };
+        try {
+          await post('/api/pos', payload);
+          document.getElementById('status').innerHTML =
+            `<span class="ok">Start ✔ (${fmt(payload.ts)})</span>`;
+        } catch (e) {
+          document.getElementById('status').innerHTML =
+            '<span class="err">Błąd wysyłki (pierwszy pomiar)</span>';
+        }
+      }, err => {
+        document.getElementById('status').innerHTML =
+          `<span class="err">Błąd geolokacji: ${err.message}</span>`;
+      }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+
+      // Strumień pozycji (aktualizacje)
+      watchId = navigator.geolocation.watchPosition(async pos => {
+        const payload = {
+          unit,
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: pos.coords.accuracy,
+          spd: pos.coords.speed || 0,
+          ts: Date.now()
+        };
+        try { await post('/api/pos', payload); }
+        catch (e) { /* cicho – spróbuje następnym razem */ }
+      }, err => {
+        document.getElementById('status').innerHTML =
+          `<span class="err">Błąd śledzenia: ${err.message}</span>`;
+      }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
+
+      document.getElementById('start').disabled = true;
+      document.getElementById('stop').disabled = false;
+    };
+
+    document.getElementById('stop').onclick = () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+      document.getElementById('start').disabled = false;
+      document.getElementById('stop').disabled = true;
+      document.getElementById('status').textContent = 'Zatrzymano.';
+    };
+  </script>
+</body>
+</html>
