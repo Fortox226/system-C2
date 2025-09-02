@@ -1,1 +1,1 @@
-ngrok http --url=honest-dominant-emu.ngrok-free.app 80
+ngrok http --url=honest-dominant-emu.ngrok-free.app 3000npm
